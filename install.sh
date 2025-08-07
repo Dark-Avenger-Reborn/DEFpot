@@ -3,6 +3,9 @@
 # Dependencies
 sudo apt update && sudo apt install -y git python3-venv libssl-dev libffi-dev build-essential libpython3-dev libevent-dev
 
+# Install Website Dependencies
+pip install -r cowrie_web_monitor/requirements.txt
+
 cd cowrie
 
 # Setup virtual environment
