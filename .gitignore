@@ -1,0 +1,15 @@
+# Ignore Python virtual environments
+cowrie/cowrie-env/
+
+# Ignore Python cache and compiled files
+cowrie/__pycache__/
+cowrie/*.pyc
+cowrie/*.pyo
+cowrie/*.pyd
+cowrie/*.log
+
+# Ignore Cowrie log and runtime files
+cowrie/cowrie/var/
+cowrie/cowrie/dl/
+cowrie/cowrie/log/
+cowrie/cowrie/tty/

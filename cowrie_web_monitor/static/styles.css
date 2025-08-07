@@ -1,0 +1,24 @@
+body {
+    font-family: monospace;
+    background-color: #121212;
+    color: #00ff88;
+    margin: 0;
+    padding: 1em;
+}
+
+h1 {
+    color: #00ffaa;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.log-box {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    padding: 1em;
+    height: 80vh;
+    overflow-y: scroll;
+    white-space: pre-wrap;
+    font-size: 1em;
+    line-height: 1.4em;
+}
