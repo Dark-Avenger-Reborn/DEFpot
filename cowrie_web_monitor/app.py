@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, send_from_directory
 import time
 import re
 import requests
@@ -10,6 +10,8 @@ app = Flask(__name__)
 
 LOGFILE = "../cowrie/var/log/cowrie/cowrie.log"
 WEBHOOK_PATH = "../webhook_url.txt"
+IMAGES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "images"))
+
 
 seen_ips = set()
 logged_in_users = defaultdict(str)
@@ -109,6 +111,10 @@ def index():
 @app.route("/stream")
 def stream():
     return Response(tail_log(), mimetype="text/event-stream")
+
+@app.route("/logo.png")
+def logo_png():
+    return send_from_directory(IMAGES_DIR, "logo.png")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True, threaded=True)

@@ -2,12 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cowrie SSH Monitor</title>
+    <title>DEFpot | Cowrie SSH Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- added -->
+    <link rel="icon" href="/logo.png" type="image/png">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
-    <h1>🐍 Cowrie SSH Traffic</h1>
-    <div id="log" class="log-box"></div>
+<body class="crt">
+    <header class="topbar">
+        <img class="brand-logo" src="/logo.png" alt="DEFpot logo"> <!-- let CSS size it -->
+        <div class="brand" aria-label="DEFpot">
+            <span class="brand-def" data-text="DEF">DEF</span><span class="brand-pot" data-text="pot">pot</span>
+            <span class="tagline">“Step in the pot. Join the flock.”
+</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="log" class="log-box" aria-live="polite" aria-atomic="false"></div>
+    </main>
 
     <script>
         const log = document.getElementById("log");
@@ -22,10 +34,35 @@
             isAtBottom = log.scrollHeight - log.scrollTop - log.clientHeight < threshold;
         });
 
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+
+        function renderMinimalMarkdown(safe) {
+            // Bold: **text**
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // Inline code: `code`
+            safe = safe.replace(/`(.+?)`/g, '<code>$1</code>');
+            return safe;
+        }
+
+        function classify(text) {
+            if (text.includes("logged in as")) return "login";
+            if (text.includes("ran command:")) return "cmd";
+            if (text.includes("is likely scanning")) return "scan";
+            if (text.includes("connected")) return "connection";
+            return "default";
+        }
+
         const eventSource = new EventSource("/stream");
         eventSource.onmessage = function (event) {
+            const raw = event.data || "";
             const div = document.createElement("div");
-            div.textContent = event.data;
+            div.className = `log-entry ${classify(raw)}`;
+            const safe = escapeHtml(raw);
+            div.innerHTML = renderMinimalMarkdown(safe);
             log.appendChild(div);
             if (isAtBottom) scrollToBottom();
         };

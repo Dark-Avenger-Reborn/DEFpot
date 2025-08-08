@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/logo.png" alt="DEFpot logo" width="160">
+</p>
+
 # DEFpot  
 “Step in the pot. Join the flock.”
 
