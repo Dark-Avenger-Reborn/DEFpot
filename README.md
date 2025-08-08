@@ -98,6 +98,24 @@ Example logs:
 
 ---
 
+## 📣 Optional: Discord Webhook Alerts
+
+To enable alerts:
+
+1. Create a Discord webhook.
+2. Save the URL in a file named `webhook_url.txt` one directory above the web UI:
+
+```
+DEFpot/
+├── webhook_url.txt      # Place it here
+├── cowrie/
+├── cowrie_web_monitor/
+```
+
+> ❗ If the file is missing or the webhook is broken, the system **fails silently** — no crashes.
+
+---
+
 ## 🔁 Required for Full Operation
 
 ✅ Cowrie must be running as a `systemd` service  
