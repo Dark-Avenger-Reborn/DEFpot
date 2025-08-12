@@ -25,9 +25,9 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$(pwd)
-ExecStart=$(pwd)/bin/cowrie start
+ExecStart=$(pwd)/bin/cowrie start --nodaemon
 ExecStop=$(pwd)/bin/cowrie stop
-ExecReload=$(pwd)/bin/cowrie restart
+ExecReload=$(pwd)/bin/cowrie restart --nodaemon
 Restart=on-failure
 Environment=PYTHONUNBUFFERED=1
 
