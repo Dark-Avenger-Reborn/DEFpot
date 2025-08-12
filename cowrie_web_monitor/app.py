@@ -102,6 +102,14 @@ def parse_line(line):
             send_discord_webhook("Scanner Detected", msg, color=0xe74c3c)
             return msg
 
+    # 🚨 New: Detect logout only if logged in
+    if "logging out" in line and ip in logged_in_users:
+        user = logged_in_users.pop(ip)
+        user = logged_in_users[ip]
+        msg = f"{ip} ({user}) logged out"
+        send_discord_webhook("Logout", msg, color=0x95a5a6)
+        return msg
+
     return None
 
 @app.route("/")
