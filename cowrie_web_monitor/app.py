@@ -65,50 +65,61 @@ def parse_line(line):
     meta_match = re.match(r".*?\[(.*?),(.*?),([\d\.]+)\]", line)
     if not meta_match:
         return None
-    _, conn_id, ip = meta_match.groups()
+    protocol, conn_id, ip = meta_match.groups()
+
+    # Determine protocol name & colors
+    if "Telnet" in protocol:
+        proto_name = "Telnet"
+        proto_color = 0xffa500  # orange
+    elif "SSH" in protocol:
+        proto_name = "SSH"
+        proto_color = 0x2ecc71  # green
+    else:
+        proto_name = protocol
+        proto_color = 0x3498db  # default blue
 
     timestamp_match = re.match(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})", line)
     log_time = datetime.strptime(timestamp_match.group(1), "%Y-%m-%dT%H:%M:%S") if timestamp_match else datetime.now()
 
+    # New connection
     if "New connection:" in line:
         if ip not in seen_ips:
             seen_ips.add(ip)
             connection_times[ip] = log_time
-            msg = f"{ip} connected (possible scan)"
-            send_discord_webhook("New Connection", msg, color=0x7289da)
+            msg = f"{ip} connected to {proto_name} (possible scan)"
+            send_discord_webhook("New Connection", msg, color=proto_color)
             return msg
 
+    # Login success
     login_match = re.search(r"login attempt \[b?'?(.+?)'?/b?'?.*?'?\] succeeded", line)
     if login_match:
         user = login_match.group(1)
         logged_in_users[ip] = user
-        msg = f"{ip} logged in as **{user}** via SSH"
-        send_discord_webhook("Login Success", msg, color=0x2ecc71)
+        msg = f"{ip} logged in as **{user}** via {proto_name}"
+        send_discord_webhook("Login Success", msg, color=proto_color)
         return msg
 
+    # Command execution
     cmd_match = re.search(r"CMD: (.+)", line)
     if cmd_match:
         command = cmd_match.group(1)
-        msg = f"{ip} ran command: `{command}`"
-        send_discord_webhook("Command Executed", msg, color=0xf1c40f)
+        msg = f"{ip} ran {proto_name} command: `{command}`"
+        send_discord_webhook("Command Executed", msg, color=proto_color)
         return msg
 
+    # Scanner detection and disconnect logging
     lost_match = re.search(r"Connection lost after ([\d\.]+) seconds", line)
     if lost_match:
         duration = float(lost_match.group(1))
         if duration < 1.0 and ip not in logged_in_users and ip not in confirmed_scanners:
             confirmed_scanners.add(ip)
-            msg = f"{ip} is likely scanning (connection lasted {duration:.1f}s)"
+            msg = f"{ip} is likely scanning {proto_name} (connection lasted {duration:.1f}s)"
             send_discord_webhook("Scanner Detected", msg, color=0xe74c3c)
             return msg
-
-    # 🚨 New: Detect logout only if logged in
-    if "logging out" in line and ip in logged_in_users:
-        user = logged_in_users.pop(ip)
-        user = logged_in_users[ip]
-        msg = f"{ip} ({user}) logged out"
-        send_discord_webhook("Logout", msg, color=0x95a5a6)
-        return msg
+        else:
+            msg = f"{ip} disconnected from {proto_name} after {duration:.1f}s"
+            send_discord_webhook("Session Ended", msg, color=0x95a5a6)  # grey
+            return msg
 
     return None
 
