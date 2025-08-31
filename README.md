@@ -7,9 +7,9 @@
 
 ## 🐍 Overview
 
-**DEFpot** is a lightweight SSH honeypot system based on [Cowrie](https://github.com/cowrie/cowrie), designed to monitor and log unauthorized login attempts in real-time via a clean Flask-based web UI.
+**DEFpot** is a lightweight SSH and Telnet honeypot system based on [Cowrie](https://github.com/cowrie/cowrie), designed to monitor and log unauthorized login attempts in real-time via a clean Flask-based web UI.
 
-Attackers are lured into an isolated fake SSH environment where every move they make — from connection, login, to command execution — is logged and streamed live in a browser.
+Attackers are lured into an isolated fake environment where every move they make — from connection, login, to command execution — is logged and streamed live in a browser.
 
 ## 🔥 Features
 
@@ -65,10 +65,10 @@ This will:
 - Create a systemd service for Cowrie
 - Start Cowrie as a background service
 
-3. Configure your firewall/router to **forward port `22` (SSH)** to **port `2223`** on the host machine.  
-   This is required because Cowrie listens on `2223` (by default) instead of directly on `22`.
+3. Configure your firewall/router to **forward port `22` (SSH)** to **port `2223`** and **forward port `23` (Telnet)** to **port `2224`**on the host machine.  
+   This is required because Cowrie listens on `2223` and `2224` (by default) instead of directly on `22` and `23`.
 
-> 🔒 This prevents Cowrie from needing root to bind to port 22, while still catching incoming SSH traffic.
+> 🔒 This prevents Cowrie from needing root to bind to port 22 and 23, while still catching incoming SSH and Telnet traffic.
 
 ---
 
@@ -126,6 +126,7 @@ DEFpot/
 ✅ Cowrie must be running as a `systemd` service  
 ✅ `app.py` must be running to serve the web UI  
 ✅ Port 22 must be redirected to Cowrie’s listening port (default: 2223)
+✅ Port 23 must be redirected to Cowrie’s listening port (default: 2224)
 
 ---
 
