@@ -18,6 +18,7 @@ Attackers are lured into an isolated fake SSH environment where every move they 
 - ✅ Visual feedback on:
   - Port scanning behavior
   - SSH logins (usernames)
+  - Telnet logins (usernames)
   - Commands executed
 - ✅ Fully sandboxed via `python3-venv`
 - ✅ Systemd service for persistent honeypot runtime
