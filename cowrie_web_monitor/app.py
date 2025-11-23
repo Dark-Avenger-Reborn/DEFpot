@@ -13,6 +13,7 @@ app = Flask(__name__)
 LOGFILE = "../cowrie/var/log/cowrie/cowrie.log"
 WEBHOOK_PATH = "../webhook_url.txt"
 IMAGES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "images"))
+previous_webhook = ""
 
 
 seen_ips = set()
@@ -62,6 +63,9 @@ def send_discord_webhook(title, description, color=0x3498db):
         ]
     }
     try:
+        if previous_webhook == payload:
+            return
+        previous_webhook = payload
         requests.post(WEBHOOK_URL, json=payload, timeout=3)
     except Exception:
         pass  # Fail silently
