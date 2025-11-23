@@ -5,6 +5,8 @@ import requests
 from datetime import datetime
 from collections import defaultdict
 import os
+import queue
+import threading
 
 app = Flask(__name__)
 
@@ -17,6 +19,11 @@ seen_ips = set()
 logged_in_users = defaultdict(str)
 connection_times = {}
 confirmed_scanners = set()
+
+# Queue for parsed events so SSE clients can read events produced by the
+# background tailer thread. Centralizing parsing in the tailer ensures
+# webhooks are sent even with no connected web clients.
+event_queue = queue.Queue()
 
 # Read webhook URL once at start (fail silently if missing)
 def get_webhook_url():
@@ -50,16 +57,37 @@ def send_discord_webhook(title, description, color=0x3498db):
         pass  # Fail silently
 
 def tail_log():
-    with open(LOGFILE, "r") as f:
-        f.seek(0, 2)
-        while True:
-            line = f.readline()
-            if not line:
-                time.sleep(0.1)
-                continue
-            parsed = parse_line(line)
-            if parsed:
-                yield f"data: {parsed}\n\n"
+    # Read parsed events from the shared queue. This blocks until the
+    # background tailer produces new events.
+    while True:
+        parsed = event_queue.get()
+        try:
+            yield f"data: {parsed}\n\n"
+        finally:
+            event_queue.task_done()
+
+
+def _background_tail():
+    """Background thread: tails the log file, parses lines and puts
+    parsed messages into `event_queue`. This is what sends webhooks
+    regardless of whether any clients are connected to the SSE stream.
+    """
+    try:
+        with open(LOGFILE, "r") as f:
+            f.seek(0, 2)
+            while True:
+                line = f.readline()
+                if not line:
+                    time.sleep(0.1)
+                    continue
+                parsed = parse_line(line)
+                if parsed:
+                    # parse_line already triggers webhook sending.
+                    # Put the parsed message into the queue for SSE clients.
+                    event_queue.put(parsed)
+    except Exception:
+        # Fail silently to avoid crashing the app; could be logged.
+        return
 
 def parse_line(line):
     meta_match = re.match(r".*?\[(.*?),(.*?),([\d\.]+)\]", line)
@@ -136,4 +164,11 @@ def logo_png():
     return send_from_directory(IMAGES_DIR, "logo.png")
 
 if __name__ == "__main__":
+    # Start background tailer so webhooks are sent even with no clients.
+    # When running with the Flask debug reloader, the process is started
+    # twice. Only start the tailer in the reloader child process to avoid
+    # duplicate threads.
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        tailer_thread = threading.Thread(target=_background_tail, name="log-tailer", daemon=True)
+        tailer_thread.start()
     app.run(host="0.0.0.0", port=8080, debug=True, threaded=True)
