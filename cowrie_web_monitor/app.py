@@ -63,9 +63,6 @@ def send_discord_webhook(title, description, color=0x3498db):
         ]
     }
     try:
-        if previous_webhook == payload:
-            return
-        previous_webhook = payload
         requests.post(WEBHOOK_URL, json=payload, timeout=3)
     except Exception:
         pass  # Fail silently
