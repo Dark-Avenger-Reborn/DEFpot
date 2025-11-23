@@ -39,7 +39,17 @@ def get_webhook_url():
 WEBHOOK_URL = get_webhook_url()
 
 def send_discord_webhook(title, description, color=0x3498db):
+    # Debug print to help diagnose duplicate sends: show process & thread.
+    try:
+        print(f"[webhook-send] pid={os.getpid()} thread={threading.current_thread().name} title={title!r}")
+    except Exception:
+        pass
+
     if not WEBHOOK_URL:
+        try:
+            print("[webhook-send] no WEBHOOK_URL configured; skipping HTTP POST")
+        except Exception:
+            pass
         return  # Fail silently
     payload = {
         "embeds": [
@@ -139,7 +149,7 @@ def parse_line(line):
     lost_match = re.search(r"Connection lost after ([\d\.]+) seconds", line)
     if lost_match:
         duration = float(lost_match.group(1))
-        if duration < 1.0 and ip not in logged_in_users and ip not in confirmed_scanners:
+        if duration < 1.0:
             confirmed_scanners.add(ip)
             msg = f"{ip} is likely scanning {proto_name} (connection lasted {duration:.1f}s)"
             send_discord_webhook("Scanner Detected", msg, color=0xe74c3c)
