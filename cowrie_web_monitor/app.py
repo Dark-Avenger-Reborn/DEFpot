@@ -194,7 +194,7 @@ def parse_line(line):
         cmd = re.search(r"CMD: (.+)", line)
         if cmd:
             command = cmd.group(1).strip()
-            msg = f"{ip} ran {proto} command: `{command}`"
+            msg = f"{ip} ran {proto} tried to run a command"
             enqueue_webhook(
                 "Command Executed",
                 msg,
